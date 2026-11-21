@@ -102,7 +102,7 @@
             font-size: 12px;
             color: #93c5fd;
             white-space: nowrap;
-            max-width: 280px;
+            max-width: 320px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -179,16 +179,22 @@
             if (!url) return;
             urlInput.value = url;
 
-            if (frame && typeof frame.go === "function") {
-                setStatus("Going: " + url);
-                try {
-                    frame.go(url);
-                } catch (err) {
-                    console.error(err);
-                    setStatus(err.message || "Navigation error", true);
-                }
-            } else {
-                setStatus("Proxy not ready — reload page", true);
+            if (!frame || typeof frame.go !== "function") {
+                setStatus("Proxy frame not created", true);
+                return;
+            }
+
+            setStatus("Going: " + url);
+            try {
+                frame.go(url);
+                setTimeout(() => {
+                    try {
+                        setStatus("Frame: " + iframe.getAttribute("src"));
+                    } catch (_) {}
+                }, 150);
+            } catch (err) {
+                console.error(err);
+                setStatus(err.message || "Navigation error", true);
             }
         }
 
@@ -223,18 +229,11 @@
 
                 await transport.init();
 
-                const config = {
-                    ...defaultConfig,
-                    prefix: "./scramjet/",
-                    scramjetPath: "./scramjet/scramjet.js",
-                    wasmPath: "./scramjet/scramjet.wasm",
-                    injectPath: "./controller/controller.inject.js"
-                };
-
+                setStatus("Starting Scramjet...");
                 scramjet = new Controller({
                     serviceworker,
                     transport,
-                    scramjetConfig: config
+                    scramjetConfig: defaultConfig
                 });
 
                 await scramjet.wait();
