@@ -140,8 +140,8 @@
         <iframe id="browserFrame" src="home.html" title="freepa Browser"></iframe>
     </div>
 
-    <script src="scramjet/scramjet.js"></script>
-    <script src="controller/controller.api.js"></script>
+    <script src="./scramjet/scramjet.js"></script>
+    <script src="./controller/controller.api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@3.0.1/dist/index.js"></script>
 
     <script>
@@ -195,9 +195,7 @@
         async function init() {
             try {
                 setStatus("Registering SW...");
-                await navigator.serviceWorker.register("sw.js", {
-                    scope: "./"
-                });
+                await navigator.serviceWorker.register("./sw.js");
                 const reg = await navigator.serviceWorker.ready;
 
                 if (!navigator.serviceWorker.controller && reg.active) {
@@ -227,6 +225,7 @@
 
                 const config = {
                     ...defaultConfig,
+                    prefix: "./scramjet/",
                     scramjetPath: "./scramjet/scramjet.js",
                     wasmPath: "./scramjet/scramjet.wasm",
                     injectPath: "./controller/controller.inject.js"
