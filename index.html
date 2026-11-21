@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>freepa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0c0e1a;
+            height: 100vh;
+            overflow: hidden;
+            color: #eef2ff;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 14px;
+            background: linear-gradient(90deg, #161533 0%, #111d3a 100%);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.25);
+            align-items: center;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: #ffffff;
+            margin-right: 4px;
+            user-select: none;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        button {
+            background: rgba(99, 102, 241, 0.16);
+            border: 1px solid rgba(129, 140, 248, 0.28);
+            color: #eef2ff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.18s ease;
+        }
+
+        button:hover {
+            background: rgba(129, 140, 248, 0.3);
+            border-color: rgba(165, 180, 252, 0.55);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        #gamesBtn {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.35));
+            border-color: rgba(139, 92, 246, 0.6);
+            font-weight: 600;
+        }
+
+        #gamesBtn:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.55), rgba(59, 130, 246, 0.55));
+        }
+
+        input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(129, 140, 248, 0.28);
+            background: #0b0d18;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.22);
+        }
+
+        .status {
+            padding: 6px 12px;
+            background: rgba(30, 41, 82, 0.75);
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #93c5fd;
+            white-space: nowrap;
+        }
+
+        iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+            background: #0c0e1a;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <div class="brand">freepa</div>
+            <div class="nav-buttons">
+                <button id="homeBtn" title="Home">🏠</button>
+                <button id="backBtn" title="Back">←</button>
+                <button id="forwardBtn" title="Forward">→</button>
+                <button id="reloadBtn" title="Reload">↻</button>
+            </div>
+            <input type="text" id="urlInput" placeholder="Enter URL...">
+            <button id="goBtn">Go</button>
+            <button id="gamesBtn">Play Games</button>
+            <div class="status" id="status">Ready</div>
+        </div>
+        <iframe id="browserFrame" src="home.html" title="freepa Browser"></iframe>
+    </div>
+
+    <script src="scramjet/scramjet.js"></script>
+    <script src="controller/controller.api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@3.0.1/dist/index.js"></script>
+
+    <script>
+        const { Controller } = $scramjetController;
+        const { defaultConfig } = $scramjet;
+        const EpoxyTransport = self.EpoxyTransport.default;
+
+        const iframe = document.getElementById("browserFrame");
+        const urlInput = document.getElementById("urlInput");
+        const statusEl = document.getElementById("status");
+
+        let scramjet = null;
+        let frame = null;
+
+        function setStatus(t, err = false) {
+            statusEl.textContent = t;
+            statusEl.style.color = err ? "#ff6b6b" : "#93c5fd";
+        }
+
+        function norm(u) {
+            return u.startsWith("http") ? u : "https://" + u;
+        }
+
+        function goHome() {
+            urlInput.value = "";
+            iframe.src = "home.html";
+        }
+
+        async function init() {
+            try {
+                setStatus("Initializing...");
+
+                await navigator.serviceWorker.ready;
+
+                const serviceworker =
+                    navigator.serviceWorker.controller ??
+                    (await navigator.serviceWorker.ready).active;
+
+                const transport = new EpoxyTransport({
+                    wisp: "wss://wisp.mercurywork.shop/"
+                });
+
+                await transport.init();
+
+                scramjet = new Controller({
+                    serviceworker,
+                    transport,
+                    scramjetConfig: defaultConfig
+                });
+
+                await scramjet.wait();
+
+                frame = scramjet.createFrame(iframe);
+                setStatus("Ready");
+            } catch (e) {
+                console.error(e);
+                setStatus(e.message, true);
+            }
+        }
+
+        function go() {
+            const url = norm(urlInput.value);
+            urlInput.value = url;
+            frame?.go(url);
+        }
+
+        document.getElementById("homeBtn").onclick = goHome;
+        document.getElementById("goBtn").onclick = go;
+
+        document.getElementById("gamesBtn").onclick = () => {
+            urlInput.value = "";
+            iframe.src = "games.html";
+        };
+
+        window.addEventListener("message", e => {
+            if (e.data?.type === "navigate" && e.data.url) {
+                urlInput.value = e.data.url;
+                if (frame) {
+                    frame.go(e.data.url);
+                } else {
+                    iframe.src = e.data.url;
+                }
+            }
+        });
+
+        urlInput.addEventListener("keydown", e => {
+            if (e.key === "Enter") go();
+        });
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").then(init);
+        } else {
+            setStatus("No service worker support", true);
+        }
+    </script>
+</body>
+
+</html>
