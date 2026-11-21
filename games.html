@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>freepa — Games</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top, #1d1842 0%, #0d1329 55%, #090c18 100%);
+      color: #eef2ff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #c084fc, #60a5fa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p {
+      color: #a5b4fc;
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 740px;
+    }
+    .card {
+      background: rgba(24, 29, 62, 0.85);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.32), rgba(59, 130, 246, 0.32));
+      border-color: #818cf8;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(59, 130, 246, 0.22);
+    }
+    .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+    }
+    .card span {
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>freepa Games</h1>
+  <p>Click a game to launch it.</p>
+
+  <div class="grid">
+    <button class="card" onclick="openGame('https://kristenblackburnvolleyballcamps.com/fruit/owt2/index.html')">
+      <img src="data:image/webp;base64,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" alt="OWT 2">
+      <span>OWT 2</span>
+    </button>
+
+    <button class="card" onclick="openGame('https://kristenblackburnvolleyballcamps.com/fruit/bitlife/index.html')">
+      <img src="https://th.bing.com/th/id/OIP.ed0vN6LGwQFtk6xmDmVoHwHaEK?w=290&h=180&c=7&r=0&o=7&pid=1.7&rm=3" alt="BitLife">
+      <span>BitLife</span>
+    </button>
+
+    <button class="card" onclick="openGame('https://kristenblackburnvolleyballcamps.com/fruit/atlas-games/gladihoppers/index.html')">
+      <img src="https://th.bing.com/th/id/OIP.ZeajBlEibFZIQdzU-6AJ3wHaF4?w=203&h=180&c=7&r=0&o=7&pid=1.7&rm=3" alt="Gladihoppers">
+      <span>Gladihoppers</span>
+    </button>
+
+    <button class="card" onclick="openGame('https://kristenblackburnvolleyballcamps.com/fruit/bottleflip/index.html')">
+      <img src="https://th.bing.com/th/id/OIP.M6itE4CdxxNZ4D6siADcLQHaHa?w=179&h=180&c=7&r=0&o=7&pid=1.7&rm=3" alt="Bottle Flip">
+      <span>Bottle Flip</span>
+    </button>
+  </div>
+
+  <script>
+    function openGame(url) {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "navigate", url }, "*");
+      } else {
+        window.location.href = url;
+      }
+    }
+  </script>
+</body>
+</html>
