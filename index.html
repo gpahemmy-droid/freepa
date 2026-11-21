@@ -102,7 +102,7 @@
             font-size: 12px;
             color: #93c5fd;
             white-space: nowrap;
-            max-width: 320px;
+            max-width: 340px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -191,7 +191,7 @@
                     try {
                         setStatus("Frame: " + iframe.getAttribute("src"));
                     } catch (_) {}
-                }, 150);
+                }, 200);
             } catch (err) {
                 console.error(err);
                 setStatus(err.message || "Navigation error", true);
