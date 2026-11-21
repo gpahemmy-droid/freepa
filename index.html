@@ -102,7 +102,7 @@
             font-size: 12px;
             color: #93c5fd;
             white-space: nowrap;
-            max-width: 260px;
+            max-width: 280px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -171,6 +171,7 @@
         function goHome() {
             urlInput.value = "";
             iframe.src = "home.html";
+            setStatus("Ready");
         }
 
         function navigateProxy(rawUrl) {
@@ -179,7 +180,7 @@
             urlInput.value = url;
 
             if (frame && typeof frame.go === "function") {
-                setStatus("Loading...");
+                setStatus("Going: " + url);
                 try {
                     frame.go(url);
                 } catch (err) {
@@ -224,10 +225,17 @@
 
                 await transport.init();
 
+                const config = {
+                    ...defaultConfig,
+                    scramjetPath: "./scramjet/scramjet.js",
+                    wasmPath: "./scramjet/scramjet.wasm",
+                    injectPath: "./controller/controller.inject.js"
+                };
+
                 scramjet = new Controller({
                     serviceworker,
                     transport,
-                    scramjetConfig: defaultConfig
+                    scramjetConfig: config
                 });
 
                 await scramjet.wait();
@@ -258,6 +266,7 @@
         document.getElementById("gamesBtn").onclick = () => {
             urlInput.value = "";
             iframe.src = "games.html";
+            setStatus("Ready");
         };
 
         window.addEventListener("message", e => {
