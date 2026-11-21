@@ -187,25 +187,33 @@
                     setStatus(err.message || "Navigation error", true);
                 }
             } else {
-                setStatus("Proxy not ready yet", true);
+                setStatus("Proxy not ready — reload page", true);
             }
         }
 
         async function init() {
             try {
                 setStatus("Registering SW...");
-                const reg = await navigator.serviceWorker.register("sw.js", {
+                await navigator.serviceWorker.register("sw.js", {
                     scope: "./"
                 });
-                await navigator.serviceWorker.ready;
+                const reg = await navigator.serviceWorker.ready;
+
+                if (!navigator.serviceWorker.controller && reg.active) {
+                    setStatus("Activating SW...");
+                    if (!sessionStorage.getItem("freepa_sw_reloaded")) {
+                        sessionStorage.setItem("freepa_sw_reloaded", "1");
+                        window.location.reload();
+                        return;
+                    }
+                }
+                sessionStorage.removeItem("freepa_sw_reloaded");
 
                 const serviceworker =
-                    navigator.serviceWorker.controller ??
-                    reg.active ??
-                    (await navigator.serviceWorker.ready).active;
+                    navigator.serviceWorker.controller ?? reg.active;
 
                 if (!serviceworker) {
-                    setStatus("Refresh page for SW", true);
+                    setStatus("SW not controlling page", true);
                     return;
                 }
 
