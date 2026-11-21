@@ -102,6 +102,9 @@
             font-size: 12px;
             color: #93c5fd;
             white-space: nowrap;
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         iframe {
@@ -132,7 +135,7 @@
             <input type="text" id="urlInput" placeholder="Enter URL...">
             <button id="goBtn">Go</button>
             <button id="gamesBtn">Play Games</button>
-            <div class="status" id="status">Ready</div>
+            <div class="status" id="status">Initializing...</div>
         </div>
         <iframe id="browserFrame" src="home.html" title="freepa Browser"></iframe>
     </div>
@@ -155,11 +158,14 @@
 
         function setStatus(t, err = false) {
             statusEl.textContent = t;
+            statusEl.title = t;
             statusEl.style.color = err ? "#ff6b6b" : "#93c5fd";
         }
 
         function norm(u) {
-            return u.startsWith("http") ? u : "https://" + u;
+            const trimmed = u.trim();
+            if (!trimmed) return "";
+            return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
         }
 
         function goHome() {
@@ -167,16 +173,43 @@
             iframe.src = "home.html";
         }
 
+        function navigateProxy(rawUrl) {
+            const url = norm(rawUrl);
+            if (!url) return;
+            urlInput.value = url;
+
+            if (frame && typeof frame.go === "function") {
+                setStatus("Loading...");
+                try {
+                    frame.go(url);
+                } catch (err) {
+                    console.error(err);
+                    setStatus(err.message || "Navigation error", true);
+                }
+            } else {
+                setStatus("Proxy not ready yet", true);
+            }
+        }
+
         async function init() {
             try {
-                setStatus("Initializing...");
-
+                setStatus("Registering SW...");
+                const reg = await navigator.serviceWorker.register("sw.js", {
+                    scope: "./"
+                });
                 await navigator.serviceWorker.ready;
 
                 const serviceworker =
                     navigator.serviceWorker.controller ??
+                    reg.active ??
                     (await navigator.serviceWorker.ready).active;
 
+                if (!serviceworker) {
+                    setStatus("Refresh page for SW", true);
+                    return;
+                }
+
+                setStatus("Connecting Wisp...");
                 const transport = new EpoxyTransport({
                     wisp: "wss://wisp.mercurywork.shop/"
                 });
@@ -195,18 +228,24 @@
                 setStatus("Ready");
             } catch (e) {
                 console.error(e);
-                setStatus(e.message, true);
+                setStatus(e.message || "Init failed", true);
             }
         }
 
-        function go() {
-            const url = norm(urlInput.value);
-            urlInput.value = url;
-            frame?.go(url);
-        }
-
         document.getElementById("homeBtn").onclick = goHome;
-        document.getElementById("goBtn").onclick = go;
+        document.getElementById("goBtn").onclick = () => navigateProxy(urlInput.value);
+
+        document.getElementById("backBtn").onclick = () => {
+            try { iframe.contentWindow.history.back(); } catch (_) {}
+        };
+
+        document.getElementById("forwardBtn").onclick = () => {
+            try { iframe.contentWindow.history.forward(); } catch (_) {}
+        };
+
+        document.getElementById("reloadBtn").onclick = () => {
+            try { iframe.contentWindow.location.reload(); } catch (_) { iframe.src = iframe.src; }
+        };
 
         document.getElementById("gamesBtn").onclick = () => {
             urlInput.value = "";
@@ -215,21 +254,16 @@
 
         window.addEventListener("message", e => {
             if (e.data?.type === "navigate" && e.data.url) {
-                urlInput.value = e.data.url;
-                if (frame) {
-                    frame.go(e.data.url);
-                } else {
-                    iframe.src = e.data.url;
-                }
+                navigateProxy(e.data.url);
             }
         });
 
         urlInput.addEventListener("keydown", e => {
-            if (e.key === "Enter") go();
+            if (e.key === "Enter") navigateProxy(urlInput.value);
         });
 
         if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("sw.js").then(init);
+            init();
         } else {
             setStatus("No service worker support", true);
         }
